@@ -1,0 +1,9 @@
+name = RSS Proxy Link Formatter
+description = Provides a link field formatter to display a cross origin RSS Feed via AJAX using the provided RSS proxy script, parser, and JSON formatter.
+
+core = 7.x
+package = Fields
+
+dependencies[] = link
+
+version = 7.x-1.x
