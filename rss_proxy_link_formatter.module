@@ -5,7 +5,7 @@
 * Main file for the RSS Proxy Link Formatter module.
 */
 
-define('RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH', 'rss-proxy-formatter/feed');
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH', 'rss-proxy-link-formatter');
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE', 'RSS Feed Field Endpoint');
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE', 3600);
 
@@ -15,7 +15,7 @@ define('RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE', 3600);
 function rss_proxy_link_formatter_menu() {
   $items[variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH)] = array(
     'title' => variable_get('rss_proxy_link_formatter_page_title', RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE),
-    'page callback' => '_rss_proxy_link_formatter_proxy_service',
+    'page callback' => 'rss_proxy_link_formatter_proxy_service',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -56,7 +56,7 @@ function rss_proxy_link_formatter_permission() {
  *
  * @see rss_proxy_link_formatter_menu()
  */
-function _rss_proxy_link_formatter_proxy_service() {
+function rss_proxy_link_formatter_proxy_service() {
   if (isset($_GET['url']) && trim($_GET['url']) != '') {
     $url = $_GET['url'];
 
