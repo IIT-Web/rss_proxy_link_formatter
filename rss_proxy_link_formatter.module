@@ -185,6 +185,9 @@ function rss_proxy_link_formatter_field_formatter_info() {
     'ajax_rss_proxy_link' => array(
       'label' => t('Ajax Proxy of RSS Link'),
       'field types' => array('link_field'),
+      'settings' => array(
+        'max_rss_results' => '',
+      ),
     ),
   );
 }
@@ -194,12 +197,50 @@ function rss_proxy_link_formatter_field_formatter_info() {
  */
 function rss_proxy_link_formatter_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
   $elements = array();
+  $settings = $display['settings'];
   foreach ($items as $delta => $item) {
     $elements[$delta] = array(
-      '#markup' => theme('rss_proxy_link_formatter_' . $display['type'], array('element' => $item, 'field' => $instance)),
+      '#markup' => theme('rss_proxy_link_formatter_' . $display['type'], array('element' => $item, 'field' => $instance, 'max_rss_results' => $settings['max_rss_results'])),
     );
   }
   return $elements;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function rss_proxy_link_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = '';
+
+  if (!empty($settings['max_rss_results'])) {
+    $summary = t('Max results shown: @max_rss_results', array('@max_rss_results' => $settings['max_rss_results']));
+  }
+  else {
+    $summary = t('No max limit on results shown.');
+  }
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function rss_proxy_link_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $element = array();
+
+  $element['max_rss_results'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The max number of entires visible in the page for this field.'),
+    '#default_value' => $settings['max_rss_results'],
+  );
+
+  return $element;
 }
 
 /**

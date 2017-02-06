@@ -10,6 +10,8 @@
  *   - id: Number representing the index of this field starting at 1
  *   - element: An associative array containing the properties of the element
  *   - field: An associative array containing the properties of the field
+ *   - max_rss_results: A number of maximum results to show in the RSS feed.
+ *     If no max is set this value will be empty.
  * - $classes: String of classes that can be used to style contextually through
  *   CSS. It can be manipulated through the variable $classes_array from
  *   preprocess functions. The default values can be one or more of the
@@ -45,11 +47,16 @@
   <script type="text/javascript">
     jQuery(document).ready(function($){
       var proxy_url = "<?php print $variables['proxy_url']; ?>";
+      var max_rss_results = <?php !empty($variables['max_rss_results']) ? print $variables['max_rss_results'] : print 'false'; ?>;
       var jqxhr = $.ajax(proxy_url).done(function(data){
         //console.log(data);
         if (data.channel) {
           var html = '<ul>';
-          for (var i = 0; i < data.channel.item.length; i++) {
+          var count = data.channel.item.length;
+          if (max_rss_results && max_rss_results < count) {
+            count = max_rss_results;
+          }
+          for (var i = 0; i < count; i++) {
             var title = data.channel.item[i].title;
             var link = data.channel.item[i].link;;
             html += '<li><a target="_blank" href="' + link + '" title="' + title + '">' + title + '</a></li>';
