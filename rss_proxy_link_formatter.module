@@ -6,6 +6,7 @@
 */
 
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH', 'rss-proxy-link-formatter');
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_URL_PARAMETER', 'feed');
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE', 'RSS Proxy Service Endpoint');
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE', 3600);
 
@@ -57,8 +58,9 @@ function rss_proxy_link_formatter_permission() {
  * @see rss_proxy_link_formatter_menu()
  */
 function rss_proxy_link_formatter_proxy_service() {
-  if (isset($_GET['rss']) && trim($_GET['rss']) != '') {
-    $url = $_GET['rss'];
+  $url_param = variable_get('rss_proxy_link_formatter_url_parameter', RSS_PROXY_LINK_FORMATTER_DEFAULT_URL_PARAMETER);
+  if (isset($_GET[$url_param]) && trim($_GET[$url_param]) != '') {
+    $url = $_GET[$url_param];
 
     // Start curl session
     $session = curl_init($url);
@@ -117,13 +119,23 @@ function rss_proxy_link_formatter_config_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('RSS Proxy Service Path'),
     '#size' => 100,
-    '#description' => t('Specify a relative URL path for the RSS proxy service endpoint. The GET parameter used used to specify the feed url is <em>rss</em>.'),
+    '#description' => t('Specify a relative URL path for the RSS proxy service endpoint.'),
     '#required' => TRUE,
     '#default_value' => variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH),
     '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q='),
   );
 
-  //
+  // Text field for RSS feed source URL parameter
+  $form['rss_proxy_link_formatter_url_parameter'] = array(
+    '#type' => 'textfield',
+    '#title' => t('RSS Proxy Service URL Parameter'),
+    '#size' => 100,
+    '#description' => t('The URL parameter used to pass the RSS link source URL to the proxy service.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('rss_proxy_link_formatter_url_parameter', RSS_PROXY_LINK_FORMATTER_DEFAULT_URL_PARAMETER),
+  );
+
+  // Select field for setting the external cache expiration time
   $form['rss_proxy_link_formatter_external_cache'] = array(
     '#type' => 'select',
     '#title' => t('Expiration of cached feeds'),
@@ -214,5 +226,6 @@ function rss_proxy_link_formatter_theme() {
  */
 function template_preprocess_rss_proxy_link_formatter_ajax_rss_proxy_link(&$variables) {
   $proxy_path = variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH);
-  $variables['proxy_url'] = '/' . $proxy_path . '?rss=' . $variables['element']['url'];
+  $url_param = variable_get('rss_proxy_link_formatter_url_parameter', RSS_PROXY_LINK_FORMATTER_DEFAULT_URL_PARAMETER);
+  $variables['proxy_url'] = '/' . $proxy_path . '?' . $url_param . '=' . $variables['element']['url'];
 }
