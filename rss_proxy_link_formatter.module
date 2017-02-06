@@ -238,6 +238,7 @@ function rss_proxy_link_formatter_field_formatter_settings_form($field, $instanc
     '#type' => 'textfield',
     '#title' => t('The max number of entires visible in the page for this field.'),
     '#default_value' => $settings['max_rss_results'],
+    '#element_validate' => array('element_validate_integer_positive'),
   );
 
   return $element;
