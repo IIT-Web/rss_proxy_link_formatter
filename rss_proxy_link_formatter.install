@@ -4,3 +4,12 @@
 * @file
 * Install file for the RSS Proxy Link Formatter module.
 */
+
+/**
+ * Implements hook_uninstall().
+ */
+function rss_proxy_link_formatter_uninstall() {
+  variable_del('rss_proxy_link_formatter_service_path');
+  variable_del('rss_proxy_link_formatter_page_title');
+  variable_del('rss_proxy_link_formatter_external_cache');
+}

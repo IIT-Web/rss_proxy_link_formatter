@@ -4,3 +4,96 @@
 * @file
 * Main file for the RSS Proxy Link Formatter module.
 */
+
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH', 'rss-proxy-formatter/feed');
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE', 'RSS Feed Field Endpoint');
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE', 3600);
+
+/**
+ * Implements hook_menu().
+ */
+function rss_proxy_link_formatter_menu() {
+  $items[variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH)] = array(
+    'title' => variable_get('rss_proxy_link_formatter_page_title', RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE),
+    'page callback' => '_rss_proxy_link_formatter_proxy_service',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  // $items['admin/config/services/rss_feed_field'] = array(
+  //   'title' => 'RSS Feed Field Admin',
+  //   'description' => 'Configuration for the rss feed field module.',
+  //   'type' => MENU_NORMAL_ITEM,
+  //   'page callback' => 'drupal_get_form',
+  //   'page arguments' => array('rss_feed_field_config_form'),
+  //   'access arguments' => array('administer rss_proxy_link_formatter'),
+  //   );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function rss_proxy_link_formatter_permission() {
+  return array(
+    'administer rss_proxy_link_formatter' => array(
+      'title' => t('Administer RSS Proxy Link Formatter module'),
+      'description' => t('Perform administration tasks and configure RSS Proxy Link Formatter module.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Page callback: provides output for proxy service path.
+ *
+ * Uses curl to fetch rss feed, provided in the url GET parameter,
+ * then attempts to parse it using SimpleXML and if successful return JSON.
+ *
+ * @return
+ *   JSON results if successful. HTML error string if not successful.
+ *
+ * @see rss_proxy_link_formatter_menu()
+ */
+function _rss_proxy_link_formatter_proxy_service() {
+  if (isset($_GET['url']) && trim($_GET['url']) != '') {
+    $url = $_GET['url'];
+
+    // Start curl session
+    $session = curl_init($url);
+    curl_setopt($session, CURLOPT_HEADER, FALSE);
+    curl_setopt($session, CURLOPT_FOLLOWLOCATION, TRUE);
+    curl_setopt($session, CURLOPT_RETURNTRANSFER, TRUE);
+
+    // Make the call
+    $results = curl_exec($session);
+    curl_close($session);
+
+    // Process the results xml to json
+    $xml = simplexml_load_string($results, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    if ($xml) {
+      if (drupal_page_is_cacheable()) {
+        $cache_time = variable_get('rss_proxy_link_formatter_external_cache', RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE);
+        drupal_add_http_header('Cache-Control', 'public, max-age=' . $cache_time);
+      }
+      drupal_json_output($xml);
+    } 
+    else {
+      drupal_page_is_cacheable(true);
+      return '<p>There was an error parsing the XML RSS feed.</p>';
+    }
+  } 
+  else {
+    drupal_page_is_cacheable(true);
+    return '<p>There was an error. No RSS Feed Provided.</p>';
+  }
+}
+
+
+
+
+
+
+
