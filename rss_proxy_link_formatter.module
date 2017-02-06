@@ -6,7 +6,7 @@
 */
 
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH', 'rss-proxy-link-formatter');
-define('RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE', 'RSS Feed Field Endpoint');
+define('RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE', 'RSS Proxy Service Endpoint');
 define('RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE', 3600);
 
 /**
@@ -20,14 +20,14 @@ function rss_proxy_link_formatter_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // $items['admin/config/services/rss_feed_field'] = array(
-  //   'title' => 'RSS Feed Field Admin',
-  //   'description' => 'Configuration for the rss feed field module.',
-  //   'type' => MENU_NORMAL_ITEM,
-  //   'page callback' => 'drupal_get_form',
-  //   'page arguments' => array('rss_feed_field_config_form'),
-  //   'access arguments' => array('administer rss_proxy_link_formatter'),
-  //   );
+  $items['admin/config/services/rss-proxy-link-formatter'] = array(
+    'title' => 'RSS Proxy Link Formatter',
+    'description' => 'Configure the RSS Proxy Link Formatter module.',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('rss_proxy_link_formatter_config_form'),
+    'access arguments' => array('administer rss_proxy_link_formatter'),
+  );
 
   return $items;
 }
@@ -46,9 +46,9 @@ function rss_proxy_link_formatter_permission() {
 }
 
 /**
- * Page callback: provides output for proxy service path.
+ * Page callback; provides output for proxy service path.
  *
- * Uses curl to fetch rss feed, provided in the url GET parameter,
+ * Uses curl to fetch rss feed, provided in the rss GET parameter,
  * then attempts to parse it using SimpleXML and if successful return JSON.
  *
  * @return
@@ -57,8 +57,8 @@ function rss_proxy_link_formatter_permission() {
  * @see rss_proxy_link_formatter_menu()
  */
 function rss_proxy_link_formatter_proxy_service() {
-  if (isset($_GET['url']) && trim($_GET['url']) != '') {
-    $url = $_GET['url'];
+  if (isset($_GET['rss']) && trim($_GET['rss']) != '') {
+    $url = $_GET['rss'];
 
     // Start curl session
     $session = curl_init($url);
@@ -91,7 +91,79 @@ function rss_proxy_link_formatter_proxy_service() {
   }
 }
 
+/**
+ * Form constructor for the RSS Proxy Link Formatter admin form.
+ *
+ * @see system_settings_form()
+ * @see rss_proxy_link_formatter_config_form_submit()
+ *
+ * @ingroup forms
+ */
+function rss_proxy_link_formatter_config_form($form, &$form_state) {
+  $form = array();
 
+  // Text field for rss proxy service endpoint page title
+  $form['rss_proxy_link_formatter_page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('RSS Proxy Service Page Title'),
+    '#size' => 100,
+    '#description' => t('Page title for RSS proxy service endpoint page.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('rss_proxy_link_formatter_page_title', RSS_PROXY_LINK_FORMATTER_DEFAULT_PAGE_TITLE),
+  );
+
+  // Text field for relative path to rss proxy service
+  $form['rss_proxy_link_formatter_service_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('RSS Proxy Service Path'),
+    '#size' => 100,
+    '#description' => t('Specify a relative URL path for the RSS proxy service endpoint. The GET parameter used used to specify the feed url is <em>rss</em>.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH),
+    '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q='),
+  );
+
+  //
+  $form['rss_proxy_link_formatter_external_cache'] = array(
+    '#type' => 'select',
+    '#title' => t('Expiration of cached feeds'),
+    '#options' => array(
+      0 => t('<none>'),
+      60 => t('1 min'),
+      180 => t('3 min'),
+      300 => t('5 min'),
+      600 => t('10 min'),
+      900 => t('15 min'),
+      1800 => t('30 min'),
+      2700 => t('45 min'),
+      3600 => t('1 hour'),
+      7200 => t('2 hours'),
+      10800 => t('3 hours'),
+      21600 => t('6 hours'),
+      32400 => t('9 hours'),
+      43200 => t('12 hours'),
+      86400 => t('1 day'),
+    ),
+    '#default_value' => variable_get('rss_proxy_link_formatter_external_cache', RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE),
+    '#description' => t('The maximum time an external cache can use an old version of a proxied feed.'),
+  );
+
+  //return system_settings_form($form);
+  $form = system_settings_form($form);
+  $form['#submit'][] = 'rss_proxy_link_formatter_config_form_submit';
+  return $form;
+}
+
+/**
+ * Form submission handler for rss_proxy_link_formatter_config_form().
+ *
+ * @see rss_proxy_link_formatter_config_form()
+ */
+function rss_proxy_link_formatter_config_form_submit($form, &$form_state) {
+  // Set a variable to let menu_execute_active_handler() know that menu rebuild is required
+  variable_set('menu_rebuild_needed', TRUE);
+  //drupal_set_message(t('TEST: The form has been submitted.'));
+}
 
 
 
