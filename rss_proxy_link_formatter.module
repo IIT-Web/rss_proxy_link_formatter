@@ -165,7 +165,54 @@ function rss_proxy_link_formatter_config_form_submit($form, &$form_state) {
   //drupal_set_message(t('TEST: The form has been submitted.'));
 }
 
+/**
+ * Implements hook_field_formatter_info().
+ */
+function rss_proxy_link_formatter_field_formatter_info() {
+  return array(
+    'ajax_rss_proxy_link' => array(
+      'label' => t('Ajax Proxy of RSS Link'),
+      'field types' => array('link_field'),
+    ),
+  );
+}
 
+/**
+ * Implements hook_field_formatter_view().
+ */
+function rss_proxy_link_formatter_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
+  $elements = array();
+  foreach ($items as $delta => $item) {
+    $elements[$delta] = array(
+      '#markup' => theme('rss_proxy_link_formatter_' . $display['type'], array('element' => $item, 'field' => $instance)),
+    );
+  }
+  return $elements;
+}
 
+/**
+ * Implements hook_theme().
+ */
+function rss_proxy_link_formatter_theme() {
+  return array(
+    'rss_proxy_link_formatter_ajax_rss_proxy_link' => array(
+      'template' => 'ajax-rss-proxy-link',
+      'variables' => array('element' => NULL),
+    ),
+  );
+}
 
-
+/**
+ * Prepares variables for Ajax RSS Proxy Link templates.
+ *
+ * Default template: ajax-rss-proxy-link.tpl.php
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element
+ *   - field: An associative array containing the properties of the field
+ */
+function template_preprocess_rss_proxy_link_formatter_ajax_rss_proxy_link(&$variables) {
+  $proxy_path = variable_get('rss_proxy_link_formatter_service_path', RSS_PROXY_LINK_FORMATTER_DEFAULT_SERVICE_PATH);
+  $variables['proxy_url'] = '/' . $proxy_path . '?rss=' . $variables['element']['url'];
+}
