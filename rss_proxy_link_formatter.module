@@ -78,17 +78,16 @@ function rss_proxy_link_formatter_proxy_service() {
     if ($xml) {
       if (drupal_page_is_cacheable()) {
         $cache_time = variable_get('rss_proxy_link_formatter_external_cache', RSS_PROXY_LINK_FORMATTER_DEFAULT_EXTERNAL_CACHE);
+        drupal_page_is_cacheable(FALSE);
         drupal_add_http_header('Cache-Control', 'public, max-age=' . $cache_time);
       }
       drupal_json_output($xml);
     } 
     else {
-      drupal_page_is_cacheable(true);
       return '<p>There was an error parsing the XML RSS feed.</p>';
     }
   } 
   else {
-    drupal_page_is_cacheable(true);
     return '<p>There was an error. No RSS Feed Provided.</p>';
   }
 }
